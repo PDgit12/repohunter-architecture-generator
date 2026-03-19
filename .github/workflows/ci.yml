@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test-and-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Compile checks
+        run: |
+          python -m py_compile github_repohunter/server.py github_repohunter/cli.py github_repohunter/architecture_agents.py github_repohunter/security_utils.py
+
+      - name: Unit tests
+        run: |
+          python -m unittest discover -s tests -p "test_*.py"
+
+      - name: Production config smoke
+        run: |
+          python - <<'PY'
+          import os
+          os.environ["ENVIRONMENT"]="production"
+          os.environ["ARCHITECTURE_API_KEY"]="ci_key"
+          os.environ["ALLOW_ORIGINS"]="http://localhost:5173"
+          os.environ["ARCH_RATE_LIMIT_PER_MIN"]="10"
+          import github_repohunter.server as srv
+          assert srv.ENVIRONMENT == "production"
+          assert len(srv.ARCHITECTURE_API_KEYS) > 0
+          print("PROD_CONFIG_OK")
+          PY
+
+      - name: CLI smoke
+        run: |
+          repohunter demo --output architecture.ci.demo.md --json
+          test -f architecture.ci.demo.md
+
+      - name: Dependency audit
+        run: |
+          python -m pip install pip-audit
+          pip-audit --progress-spinner off

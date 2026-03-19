@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# RepoHunter Specifics
+github_repohunter/database/chroma/
+.env
+service-account.json
+task.md
+PROJECT_FUNCTIONING_AND_INTERVIEW_GUIDE.md
+TECHNICAL_TERMS_DEEP_DIVE.md
+PROJECT_DEEP_DIVE.md
+architecture.*.md
+architecture.demo.md
+architecture.md
+node_modules/
+dist/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Local/generated artifacts (do not publish)
+.firebaserc
+adapter_config.json
+adapter_model.safetensors
+adapters/
+data/
+scan_pid.txt
+synthesis_pid.txt

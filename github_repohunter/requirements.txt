@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+requests
+python-dotenv
+httpx
+chromadb
+sentence-transformers
+torch
+unsloth

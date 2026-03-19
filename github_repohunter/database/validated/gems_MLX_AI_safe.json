@@ -1,0 +1,72 @@
+[
+    {
+        "name": "wsadaaaa/translategemma-cli",
+        "url": "https://github.com/wsadaaaa/translategemma-cli",
+        "description": "\ud83c\udf10 Translate text locally in 55 languages with TranslateGemma CLI, offering flexible models and easy usage across macOS, Linux, and Windows.",
+        "stars": 1,
+        "forks": 0,
+        "last_update": "2026-03-15T23:08:08Z",
+        "language": "Python",
+        "license": "MIT License"
+    },
+    {
+        "name": "matt31313131/torch-einops-utils",
+        "url": "https://github.com/matt31313131/torch-einops-utils",
+        "description": "\ud83d\udee0\ufe0f Accelerate your ML/AI projects with utility functions designed for seamless integration with PyTorch and einops.",
+        "stars": 0,
+        "forks": 0,
+        "last_update": "2026-03-15T23:04:41Z",
+        "language": "Python",
+        "license": "MIT License"
+    },
+    {
+        "name": "Adamiito0909/mlx-swift-audio",
+        "url": "https://github.com/Adamiito0909/mlx-swift-audio",
+        "description": "\ud83c\udfa4 Enhance your apps with MLX Swift Audio, offering robust text-to-speech and speech-to-text features for seamless communication.",
+        "stars": 5,
+        "forks": 2,
+        "last_update": "2026-03-15T22:45:54Z",
+        "language": "Swift",
+        "license": "MIT License"
+    },
+    {
+        "name": "jrp2014/check_models",
+        "url": "https://github.com/jrp2014/check_models",
+        "description": "This repository provides a python script for running Vision Language Models via mlx-vlm",
+        "stars": 0,
+        "forks": 0,
+        "last_update": "2026-03-15T22:44:54Z",
+        "language": "Python",
+        "license": "MIT License"
+    },
+    {
+        "name": "Hari-9345/PVB-Flow",
+        "url": "https://github.com/Hari-9345/PVB-Flow",
+        "description": "\ud83d\udcca Convert Product Vision Board JSON into clear Mermaid diagrams with AI-driven analysis for effective operational process visualization.",
+        "stars": 0,
+        "forks": 0,
+        "last_update": "2026-03-15T22:42:35Z",
+        "language": "Python",
+        "license": "MIT License"
+    },
+    {
+        "name": "lem2605/m3-shell-config",
+        "url": "https://github.com/lem2605/m3-shell-config",
+        "description": "\u26a1 Optimize your Apple M3 shell experience with a fast, modular zsh configuration designed for AI development and natural language control.",
+        "stars": 1,
+        "forks": 0,
+        "last_update": "2026-03-15T22:28:40Z",
+        "language": "Shell",
+        "license": "MIT License"
+    },
+    {
+        "name": "filipstrand/mflux",
+        "url": "https://github.com/filipstrand/mflux",
+        "description": "MLX native implementations of state-of-the-art generative image models",
+        "stars": 1889,
+        "forks": 127,
+        "last_update": "2026-03-15T22:28:29Z",
+        "language": "Python",
+        "license": "MIT License"
+    }
+]
