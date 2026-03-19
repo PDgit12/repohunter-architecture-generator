@@ -1,7 +1,0 @@
-FROM llama3
-# This is a reference for OLLAMA integration.
-# Note: Ollama handles adapters differently than natively using CUDA/Unsloth.
-ADAPTER /Users/piyushdua/Desktop/instabot/github_repohunter/scripts/repohunter_adapters
-PARAMETER temperature 0.7
-PARAMETER top_p 0.9
-SYSTEM You are RepoHunter, an expert AI that recommends the best GitHub repositories based on user needs.

@@ -187,7 +187,7 @@ The system uses parallel specialist agents that communicate through a shared con
 - **Orchestration Layer**: Concurrent agent runtime (`asyncio`) with explicit contracts.
 - **Knowledge Layer**: Chroma vector store + retriever grounded on validated repo corpus.
 - **Generation Layer**: Markdown artifact renderer + optional expert model refinement.
-- **Data Layer**: Firestore/JSONL datasets for discovery, synthesis, and training.
+- **Data Layer**: Local JSON/JSONL validated repository corpus + vector index.
 - **Ops Layer**: Logging, metrics, health checks, deployment to local/cloud.
 
 ## 4. Communication Model (Agent-to-Agent)

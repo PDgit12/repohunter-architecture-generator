@@ -1,24 +1,24 @@
-# 🏹 RepoHunter: Parallel Agent Architecture Generator
+# 🏹 RepoHunter: Runtime-Only Architecture Generator
 
-RepoHunter is a hybrid local/cloud AI system that discovers high-quality repositories, builds a RAG knowledge index, and runs **parallel specialist agents** to generate a production-ready `architecture.md` blueprint and implementation prompt.
+RepoHunter is a lean CLI/API project that uses a local validated repo corpus, RAG retrieval, and **parallel specialist agents** to generate production-ready `architecture.md` blueprints and copy-paste implementation prompts.
 
-Core loop: Discovery ➔ Validation ➔ Synthesis/Training ➔ Retrieval ➔ Parallel Agent Planning ➔ `architecture.md`.
+Core loop: Retrieval ➔ Parallel Agent Planning ➔ Reviewer Loop ➔ Synthesis ➔ `architecture.md`.
 
 ---
 
 ## 🏗️ Technical Architecture
 
 ### 🛡️ Core Infrastructure
-- **Local Control Center (M4)**: `hub.py` for orchestration + architecture generation workflows.
-- **Cloud Expert Backend (Tesla T4)**: Unsloth/Llama-3 inference and adapter serving.
-- **Data + Knowledge Plane**: Firestore + local JSONL + ChromaDB vector index.
+- **Local Control Center**: `repohunter` CLI + `hub.py` minimal runtime launcher.
+- **API Service**: `github_repohunter/server.py` for `/chat`, `/architecture/generate`, `/status`.
+- **Knowledge Plane**: local validated JSON/JSONL corpus + ChromaDB vector index.
 
 ### 🧩 Directory Structure
-- `hub.py`: CLI launcher for architecture generation, sync, and orchestration.
+- `hub.py`: minimal runtime launcher for architecture generation and status.
 - `github_repohunter/server.py`: API bridge (`/chat`, `/architecture/generate`, `/status`).
 - `github_repohunter/architecture_agents.py`: Parallel agent mesh + markdown renderer.
 - `github_repohunter/rag_engine.py`: Chroma index build/retrieval.
-- `github_repohunter/scripts/`: Cloud sync, synthesis, training, migration utilities.
+- `github_repohunter/database/validated/`: Runtime evidence corpus used by retrieval.
 
 ---
 
@@ -26,7 +26,7 @@ Core loop: Discovery ➔ Validation ➔ Synthesis/Training ➔ Retrieval ➔ Par
 
 ```bash
 git clone <your-repo-url>
-cd instabot
+cd repohunter-architecture-generator
 python3 -m venv venv && source venv/bin/activate
 pip install -e .
 repohunter demo --output architecture.demo.md
@@ -107,51 +107,30 @@ export ARCH_RATE_LIMIT_PER_MIN=20
 export ALLOW_ORIGINS="http://localhost:5173,http://127.0.0.1:5173"
 ```
 
-## 📦 What to publish vs keep private
-
-Publish (for users):
-- `README.md`
-- `docker-compose.yml`
-- `.env.example`
-- `.env.docker.example`
-- `github_repohunter/` source code
-- `tests/`
-- `.github/workflows/ci.yml`
-
-Keep private/personal:
-- Interview prep notes and deep personal study docs
-- Local generated architecture artifacts (`architecture*.md`)
-- Any internal planning notes (`task.md`)
-
----
-
 ## Getting Started (Detailed)
 
 ### 1. Prerequisites
-- **Local**: macOS (Apple Silicon recommended), Python 3.12+, Ollama installed.
-- **Cloud**: Lightning AI Studio with GPU (Tesla T4/A10G).
-- **Service**: Firebase project with Firestore enabled.
+- Python 3.10+
+- Docker (optional, for compose mode)
 
-### 2. Fast-Track Setup
-1.  **Clone & Venv**:
-    ```bash
-    git clone [your-repo] && cd instabot
-    python3 -m venv venv && source venv/bin/activate
-    pip install -r requirements.txt
-    ```
-2.  **Environment Configuration**:
-    - Place `service-account.json` in the root (do not commit to public repos).
-    - Update `github_repohunter/orchestrator.py` with your Lightning AI Studio URL.
-3.  **Launch the API + Hub**:
-    ```bash
-    python -m github_repohunter.server
-    ```
-    ```bash
-    python3 hub.py
-    ```
+### 2. Local setup
+```bash
+git clone <your-repo-url>
+cd repohunter-architecture-generator
+python3 -m venv venv && source venv/bin/activate
+pip install -e .
+```
 
 ### 3. Generate `architecture.md`
-Use hub option `1` or call API directly:
+Use CLI:
+```bash
+repohunter generate \
+  --product "Your Product" \
+  --requirement "Need a scalable multi-agent coding architecture" \
+  --output architecture.md
+```
+
+Or use API directly:
 ```bash
 curl -X POST http://localhost:8000/architecture/generate \
   -H "Content-Type: application/json" \
@@ -163,16 +142,11 @@ curl -X POST http://localhost:8000/architecture/generate \
   }'
 ```
 
-### 4. Activating "Expert Mode" (Cloud GPU)
-1.  **Launch Cloud API**:
-    On Lightning AI, run the FastAPI server:
-    ```bash
-    /home/zeus/miniconda3/envs/cloudspace/bin/python github_repohunter/scripts/cloud_inference_api.py
-    ```
-2.  **Map Port**:
-    Forward **Port 8000** in Lightning AI and copy the **Public URL**.
-3.  **Connect Hub**:
-    Use **Option 5** in `hub.py` to paste your cloud endpoint.
+### 4. Optional: Runtime hub launcher
+```bash
+python hub.py generate
+python hub.py status
+```
 
 ---
 
