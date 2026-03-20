@@ -7,14 +7,17 @@ from typing import Any
 @dataclass
 class AgentOutput:
     agent: str
-    content: str
+    domain: str
+    summary: str
+    report: str
+    update: str
 
 
 def _repo_summary(requirement: str, repos: list[dict[str, Any]]) -> str:
     if not repos:
         return "No indexed repositories were retrieved for this requirement."
     lines = [f"Requirement signal: {requirement}", ""]
-    for idx, repo in enumerate(repos[:8], 1):
+    for idx, repo in enumerate(repos[:6], 1):
         lines.append(
             f"{idx}. {repo.get('name', 'unknown')} | {repo.get('language', 'n/a')} | "
             f"{repo.get('stars', 0)} stars | {repo.get('url', '')}"
@@ -23,70 +26,152 @@ def _repo_summary(requirement: str, repos: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def _requirements_agent(requirement: str, stack_preferences: list[str] | None = None) -> AgentOutput:
-    prefs = ", ".join(stack_preferences or []) or "No explicit stack preferences"
-    return AgentOutput(
-        agent="requirements-analyst",
-        content=(
-            f"Primary objective: {requirement}\n"
-            f"Stack preferences: {prefs}\n"
-            "Success criteria:\n"
-            "- Modular, production-ready architecture.\n"
-            "- Clear boundaries between API, workers, storage, and observability.\n"
-            "- Copy-paste-ready implementation prompt."
-        ),
-    )
-
-
-def _system_design_agent(requirement: str, repos: list[dict[str, Any]]) -> AgentOutput:
-    return AgentOutput(
-        agent="system-designer",
-        content=(
-            "Proposed topology:\n"
-            "- API Gateway + auth middleware\n"
-            "- Orchestrator service for workflow execution\n"
-            "- Parallel specialist agents (planner, backend, frontend, data, qa)\n"
-            "- Shared event bus + state store for inter-agent communication\n"
-            "- RAG knowledge service fed by validated repo corpus\n"
-            "- Artifact writer service that emits architecture.md and implementation prompt\n\n"
-            f"Repository grounding:\n{_repo_summary(requirement, repos)}"
-        ),
-    )
-
-
-def _execution_planner_agent(requirement: str) -> AgentOutput:
-    return AgentOutput(
-        agent="execution-planner",
-        content=(
-            "Delivery phases:\n"
-            "1) Contracts: API schema, shared message format, event types.\n"
-            "2) Agent mesh: concurrent agent runtime with shared blackboard.\n"
-            "3) Architecture synthesis: deterministic markdown renderer + optional LLM polish.\n"
-            "4) Reliability: retries, timeouts, tracing, metrics.\n"
-            "5) CI/CD + tests + docs.\n"
-            f"Constraint anchor: {requirement}"
-        ),
-    )
-
-
-def _cross_review_agent(
-    agent_name: str,
+def _planning_scope_agent(
+    requirement: str,
+    stack_preferences: list[str] | None,
     board: dict[str, Any],
 ) -> AgentOutput:
-    req = board.get("requirements-analyst", "")
-    design = board.get("system-designer", "")
-    plan = board.get("execution-planner", "")
-    critique = (
-        f"{agent_name} cross-review:\n"
-        f"- Requirement alignment check: {'PASS' if req else 'NEEDS_INPUT'}\n"
-        f"- Design completeness check: {'PASS' if design else 'NEEDS_INPUT'}\n"
-        f"- Execution feasibility check: {'PASS' if plan else 'NEEDS_INPUT'}\n"
-        "- Improvement actions:\n"
-        "  1) Add explicit API contracts between gateway/orchestrator.\n"
-        "  2) Define failure handling for each agent stage.\n"
-        "  3) Ensure artifact generation is deterministic when LLM unavailable."
+    prefs = ", ".join(stack_preferences or []) or "No explicit stack preferences"
+    report = (
+        f"Primary objective: {requirement}\n"
+        f"Stack preferences: {prefs}\n"
+        "Scope boundary:\n"
+        "- Build only architecture generation path.\n"
+        "- Keep CLI/API surface minimal.\n"
+        "- Produce copy-paste implementation prompt.\n"
+        "Success criteria:\n"
+        "- Clear architecture structure.\n"
+        "- Actionable implementation phases.\n"
+        "- Security and quality checks included."
     )
-    return AgentOutput(agent=agent_name, content=critique)
+    return AgentOutput(
+        agent="planning-scope-agent",
+        domain="planning",
+        summary="Defined scope and success criteria for the architecture generator.",
+        report=report,
+        update="Planning/Scope: completed requirement framing and strict v1 boundaries.",
+    )
+
+
+def _planning_structure_agent(requirement: str, repos: list[dict[str, Any]], board: dict[str, Any]) -> AgentOutput:
+    scope_report = board.get("planning-scope-agent", {}).get("report", "")
+    report = (
+        "Proposed structure:\n"
+        "- API layer (FastAPI endpoints)\n"
+        "- Agent mesh layer (6 parallel specialists + blackboard)\n"
+        "- Knowledge layer (RAG retrieval over validated corpus)\n"
+        "- Artifact layer (architecture markdown writer)\n"
+        "Communication contract:\n"
+        "- Each agent reads board input.\n"
+        "- Each agent writes structured output (summary/report/update).\n"
+        "- Domains cross-review each other before synthesis.\n\n"
+        f"Input from scope agent:\n{scope_report[:450]}\n\n"
+        f"Repository grounding:\n{_repo_summary(requirement, repos)}"
+    )
+    return AgentOutput(
+        agent="planning-structure-agent",
+        domain="planning",
+        summary="Designed modular runtime structure and inter-agent communication contract.",
+        report=report,
+        update="Planning/Structure: finalized topology and shared-message flow.",
+    )
+
+
+def _quality_code_agent(board: dict[str, Any]) -> AgentOutput:
+    planning_structure = board.get("planning-structure-agent", {}).get("report", "")
+    report = (
+        "Code quality review:\n"
+        "- Enforce typed contracts for inputs/outputs.\n"
+        "- Keep deterministic markdown rendering.\n"
+        "- Keep module boundaries clean (CLI/API/agents/security).\n"
+        "- Prefer small, testable functions.\n"
+        "Cross-domain feedback to planning:\n"
+        "- Ensure each phase has acceptance criteria.\n"
+        "- Ensure generated prompt maps to concrete deliverables.\n\n"
+        f"Planning structure signal:\n{planning_structure[:420]}"
+    )
+    return AgentOutput(
+        agent="quality-code-agent",
+        domain="quality-security",
+        summary="Assessed code quality guardrails and sent actionable feedback to planning.",
+        report=report,
+        update="Quality/Code: validated maintainability constraints and testability rules.",
+    )
+
+
+def _security_agent(board: dict[str, Any]) -> AgentOutput:
+    planning_scope = board.get("planning-scope-agent", {}).get("report", "")
+    report = (
+        "Security review:\n"
+        "- Input constraints for product/requirement length.\n"
+        "- Safe output path checks (`.md`, no traversal, no absolute).\n"
+        "- API key guard and constant-time key comparison in server.\n"
+        "- Request-rate limiting with memory/redis implementation.\n"
+        "Cross-domain feedback to planning:\n"
+        "- Ensure secure defaults are visible in final artifact.\n"
+        "- Include production-readiness checklist.\n\n"
+        f"Scope signal:\n{planning_scope[:420]}"
+    )
+    return AgentOutput(
+        agent="security-agent",
+        domain="quality-security",
+        summary="Reviewed security controls and provided hardening guidance.",
+        report=report,
+        update="Quality/Security: security controls validated and documented.",
+    )
+
+
+def _implementation_writer_agent(board: dict[str, Any]) -> AgentOutput:
+    quality_report = board.get("quality-code-agent", {}).get("report", "")
+    security_report = board.get("security-agent", {}).get("report", "")
+    report = (
+        "Implementation actions:\n"
+        "1) Build 6-agent concurrent runtime with shared board updates.\n"
+        "2) Persist per-agent domain report and periodic updates.\n"
+        "3) Render markdown with domain sections and progress timeline.\n"
+        "4) Keep CLI flow simple (`generate`, `demo`, `status`).\n"
+        "Inputs consumed from quality/security:\n"
+        f"- Quality: {quality_report[:220]}\n"
+        f"- Security: {security_report[:220]}"
+    )
+    return AgentOutput(
+        agent="implementation-writer-agent",
+        domain="implementation",
+        summary="Converted domain guidance into concrete implementation steps.",
+        report=report,
+        update="Implementation/Writer: translated planning + quality + security into build tasks.",
+    )
+
+
+def _implementation_refactor_agent(board: dict[str, Any]) -> AgentOutput:
+    structure_report = board.get("planning-structure-agent", {}).get("report", "")
+    writer_report = board.get("implementation-writer-agent", {}).get("report", "")
+    report = (
+        "Refactor and cleanup actions:\n"
+        "- Remove irrelevant legacy pipeline complexity.\n"
+        "- Keep runtime-only modules required for v1.\n"
+        "- Ensure generated artifact remains user-facing and practical.\n"
+        "Cross-domain sync:\n"
+        f"- Structure signal: {structure_report[:220]}\n"
+        f"- Writer signal: {writer_report[:220]}"
+    )
+    return AgentOutput(
+        agent="implementation-refactor-agent",
+        domain="implementation",
+        summary="Ensured implementation remains lean, relevant, and aligned with v1 goals.",
+        report=report,
+        update="Implementation/Refactor: validated lean runtime scope and cleanup outcomes.",
+    )
+
+
+def _add_output(board: dict[str, Any], output: AgentOutput) -> None:
+    board[output.agent] = {
+        "domain": output.domain,
+        "summary": output.summary,
+        "report": output.report,
+        "update": output.update,
+    }
+    board["progress_updates"].append(f"{output.agent}: {output.update}")
 
 
 async def run_parallel_agents(
@@ -99,42 +184,44 @@ async def run_parallel_agents(
         "requirement": requirement,
         "stack_preferences": stack_preferences or [],
         "repo_candidates": repos,
+        "progress_updates": [],
     }
 
-    tasks = [
-        loop.run_in_executor(None, _requirements_agent, requirement, stack_preferences),
-        loop.run_in_executor(None, _system_design_agent, requirement, repos),
-        loop.run_in_executor(None, _execution_planner_agent, requirement),
-    ]
-    phase_one = await asyncio.gather(*tasks)
+    phase_one = await asyncio.gather(
+        loop.run_in_executor(None, _planning_scope_agent, requirement, stack_preferences, blackboard),
+        loop.run_in_executor(None, _planning_structure_agent, requirement, repos, blackboard),
+    )
     for out in phase_one:
-        blackboard[out.agent] = out.content
+        _add_output(blackboard, out)
 
-    review_tasks = [
-        loop.run_in_executor(None, _cross_review_agent, "requirements-reviewer", blackboard),
-        loop.run_in_executor(None, _cross_review_agent, "design-reviewer", blackboard),
-        loop.run_in_executor(None, _cross_review_agent, "execution-reviewer", blackboard),
-    ]
-    reviews = await asyncio.gather(*review_tasks)
-    for out in reviews:
-        blackboard[out.agent] = out.content
+    phase_two = await asyncio.gather(
+        loop.run_in_executor(None, _quality_code_agent, blackboard),
+        loop.run_in_executor(None, _security_agent, blackboard),
+    )
+    for out in phase_two:
+        _add_output(blackboard, out)
 
-    def _synthesis_agent(board: dict[str, Any]) -> AgentOutput:
-        return AgentOutput(
-            agent="synthesis-agent",
-            content=(
-                "Cross-agent synthesis:\n"
-                f"- Requirement signal captured: {board.get('requirement')}\n"
-                f"- Requirements constraints: {board.get('requirements-analyst', '')[:300]}\n"
-                f"- System topology draft: {board.get('system-designer', '')[:300]}\n"
-                f"- Execution phases draft: {board.get('execution-planner', '')[:300]}\n"
-                f"- Reviewer loop notes: {board.get('design-reviewer', '')[:240]}\n"
-                "Decision: keep parallel mesh + shared blackboard + artifact renderer as core architecture pattern."
-            ),
-        )
+    phase_three = await asyncio.gather(
+        loop.run_in_executor(None, _implementation_writer_agent, blackboard),
+        loop.run_in_executor(None, _implementation_refactor_agent, blackboard),
+    )
+    for out in phase_three:
+        _add_output(blackboard, out)
 
-    synthesis = await loop.run_in_executor(None, _synthesis_agent, blackboard)
-    blackboard[synthesis.agent] = synthesis.content
+    blackboard["domain_reports"] = {
+        "planning": [
+            blackboard["planning-scope-agent"]["report"],
+            blackboard["planning-structure-agent"]["report"],
+        ],
+        "quality-security": [
+            blackboard["quality-code-agent"]["report"],
+            blackboard["security-agent"]["report"],
+        ],
+        "implementation": [
+            blackboard["implementation-writer-agent"]["report"],
+            blackboard["implementation-refactor-agent"]["report"],
+        ],
+    }
     return blackboard
 
 
@@ -152,6 +239,8 @@ def render_architecture_markdown(
         ]
     ) or "- No repository evidence found in local index."
 
+    updates = "\n".join(f"- {u}" for u in mesh_output.get("progress_updates", [])) or "- No updates available."
+
     return f"""# {product_name} — Architecture Blueprint
 
 Generated at: `{timestamp}`
@@ -159,47 +248,52 @@ Generated at: `{timestamp}`
 ## 1. Product Requirement
 {requirement}
 
-## 2. Parallel Agent Mesh Design
-The system uses parallel specialist agents that communicate through a shared context store (blackboard) and event bus.
+## 2. Six-Agent Collaboration Model
+This architecture is produced by 6 parallel agents communicating through a shared blackboard:
+- Planning domain: `planning-scope-agent`, `planning-structure-agent`
+- Quality/Security domain: `quality-code-agent`, `security-agent`
+- Implementation domain: `implementation-writer-agent`, `implementation-refactor-agent`
 
-### Agent Outputs
-#### Requirements Analyst
-{mesh_output.get("requirements-analyst", "")}
+## 3. Domain Reports
 
-#### System Designer
-{mesh_output.get("system-designer", "")}
+### Planning Domain Report
+#### Planning Scope Agent
+{mesh_output.get("planning-scope-agent", {}).get("report", "")}
 
-#### Execution Planner
-{mesh_output.get("execution-planner", "")}
+#### Planning Structure Agent
+{mesh_output.get("planning-structure-agent", {}).get("report", "")}
 
-#### Reviewer Loop
-{mesh_output.get("requirements-reviewer", "")}
+### Quality and Security Domain Report
+#### Quality Code Agent
+{mesh_output.get("quality-code-agent", {}).get("report", "")}
 
-{mesh_output.get("design-reviewer", "")}
+#### Security Agent
+{mesh_output.get("security-agent", {}).get("report", "")}
 
-{mesh_output.get("execution-reviewer", "")}
+### Implementation Domain Report
+#### Implementation Writer Agent
+{mesh_output.get("implementation-writer-agent", {}).get("report", "")}
 
-#### Synthesis Agent
-{mesh_output.get("synthesis-agent", "")}
+#### Implementation Refactor Agent
+{mesh_output.get("implementation-refactor-agent", {}).get("report", "")}
 
-## 3. Recommended System Architecture
+## 4. Progress Timeline (Agent Updates)
+{updates}
+
+## 5. Recommended System Architecture
 - **API Layer**: FastAPI service exposing `/chat`, `/architecture/generate`, `/status`.
-- **Orchestration Layer**: Concurrent agent runtime (`asyncio`) with explicit contracts.
+- **Orchestration Layer**: Concurrent six-agent runtime (`asyncio`) with shared board updates.
 - **Knowledge Layer**: Chroma vector store + retriever grounded on validated repo corpus.
-- **Generation Layer**: Markdown artifact renderer + optional expert model refinement.
-- **Data Layer**: Local JSON/JSONL validated repository corpus + vector index.
-- **Ops Layer**: Logging, metrics, health checks, deployment to local/cloud.
+- **Generation Layer**: Markdown artifact renderer for architecture and implementation prompt.
+- **Ops Layer**: Input validation, rate limiting, auth checks, health endpoints.
 
-## 4. Communication Model (Agent-to-Agent)
-- Every agent reads a shared input contract.
-- Every agent writes a structured output block to the blackboard.
-- Aggregator combines blocks into:
-  - architecture decisions
-  - implementation phases
-  - risks and mitigations
-- Finalizer produces `architecture.md` and an implementation prompt.
+## 6. Communication Model (Domain-to-Domain)
+- Planning agents publish scope/structure decisions.
+- Quality/Security agents review planning outputs and add guardrails.
+- Implementation agents consume both planning and quality/security outputs.
+- Final artifact includes domain reports and progress timeline.
 
-## 5. Copy-Paste Prompt For Vibe Coding Platforms
+## 7. Copy-Paste Prompt For Vibe Coding Platforms
 ```md
 Build a production-ready implementation from this architecture:
 
@@ -207,27 +301,19 @@ Product: {product_name}
 Requirement: {requirement}
 
 Constraints:
-- Use modular services (API, orchestration, knowledge, artifact generation).
-- Implement parallel specialist agents that communicate via shared context + event messages.
-- Include observability, retry strategy, and typed request/response contracts.
-- Generate a final architecture.md artifact from agent outputs.
+- Use 6 parallel agents split across planning, quality/security, and implementation domains.
+- Use a shared blackboard so agents can read/write each other’s outputs.
+- Produce periodic progress updates while the workflow executes.
+- Include secure API boundaries, tests, and deterministic artifact rendering.
 
 Deliverables:
-1. Backend service with endpoints for chat + architecture generation
-2. Agent mesh runtime (parallel execution + aggregation)
-3. RAG integration for evidence-grounded decisions
-4. Test suite and CI checks
-5. Deployment-ready configuration
+1. FastAPI backend with architecture generation endpoint
+2. Six-agent collaborative runtime with domain reports
+3. RAG evidence retrieval for grounding
+4. Test suite + CI
+5. Deployable configuration
 ```
 
-## 6. Evidence From Indexed Repositories
+## 8. Evidence From Indexed Repositories
 {repo_lines}
-
-## 7. Production Readiness Checklist
-- Contract-first API design
-- End-to-end tests for generation pipeline
-- Deterministic fallback when LLM unavailable
-- Secret management + auth hardening
-- Monitoring dashboards + alerting
-- Release automation and rollback plan
 """

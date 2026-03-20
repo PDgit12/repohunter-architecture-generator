@@ -62,9 +62,11 @@ def cmd_generate(args: argparse.Namespace) -> int:
 
     if not args.json:
         _print_section("Parallel Agent Mesh")
-        print("Running: requirements-analyst, system-designer, execution-planner")
-        print("Reviewer loop: requirements-reviewer, design-reviewer, execution-reviewer")
-        print("Synthesizer: synthesis-agent")
+        print("Running 6 collaborative agents:")
+        print("  Planning         : planning-scope-agent, planning-structure-agent")
+        print("  Quality/Security : quality-code-agent, security-agent")
+        print("  Implementation   : implementation-writer-agent, implementation-refactor-agent")
+        print("Shared board + cross-domain communication enabled")
 
     mesh_output = asyncio.run(
         run_parallel_agents(
@@ -88,12 +90,15 @@ def cmd_generate(args: argparse.Namespace) -> int:
     output_path.write_text(markdown, encoding="utf-8")
 
     if args.json:
+        agent_ids = sorted(k for k, v in mesh_output.items() if isinstance(v, dict) and "domain" in v)
         print(
             json.dumps(
                 {
                     "output_path": str(output_path),
                     "repos_used": len(repos),
-                    "agents": sorted(k for k in mesh_output.keys() if "-" in k),
+                    "agents": agent_ids,
+                    "progress_updates": mesh_output.get("progress_updates", []),
+                    "domains": sorted(mesh_output.get("domain_reports", {}).keys()),
                 },
                 indent=2,
             )
@@ -103,7 +108,9 @@ def cmd_generate(args: argparse.Namespace) -> int:
         print("✅ architecture generated successfully")
         print(f"📄 markdown file : {output_path}")
         print(f"📚 repos used    : {len(repos)}")
-        print(f"🤝 agents active : {len([k for k in mesh_output.keys() if '-' in k])}")
+        print(f"🤝 agents active : {len([k for k, v in mesh_output.items() if isinstance(v, dict) and 'domain' in v])}")
+        print(f"🧭 domains       : {', '.join(sorted(mesh_output.get('domain_reports', {}).keys()))}")
+        print(f"📝 updates       : {len(mesh_output.get('progress_updates', []))} progress entries")
         print("💡 Next step     : copy the prompt section from the generated markdown into your coding platform")
     return 0
 

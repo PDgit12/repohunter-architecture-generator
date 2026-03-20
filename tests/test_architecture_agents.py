@@ -22,11 +22,14 @@ class TestArchitectureAgents(unittest.TestCase):
                 stack_preferences=["FastAPI", "PostgreSQL"],
             )
         )
-        self.assertIn("requirements-analyst", mesh)
-        self.assertIn("system-designer", mesh)
-        self.assertIn("execution-planner", mesh)
-        self.assertIn("synthesis-agent", mesh)
-        self.assertIn("design-reviewer", mesh)
+        self.assertIn("planning-scope-agent", mesh)
+        self.assertIn("planning-structure-agent", mesh)
+        self.assertIn("quality-code-agent", mesh)
+        self.assertIn("security-agent", mesh)
+        self.assertIn("implementation-writer-agent", mesh)
+        self.assertIn("implementation-refactor-agent", mesh)
+        self.assertIn("domain_reports", mesh)
+        self.assertIn("progress_updates", mesh)
 
         md = render_architecture_markdown(
             product_name="TestProduct",
@@ -34,7 +37,10 @@ class TestArchitectureAgents(unittest.TestCase):
             mesh_output=mesh,
             repos=repos,
         )
-        self.assertIn("Parallel Agent Mesh Design", md)
+        self.assertIn("Six-Agent Collaboration Model", md)
+        self.assertIn("Planning Domain Report", md)
+        self.assertIn("Quality and Security Domain Report", md)
+        self.assertIn("Implementation Domain Report", md)
         self.assertIn("Copy-Paste Prompt For Vibe Coding Platforms", md)
         self.assertIn("TestProduct", md)
 

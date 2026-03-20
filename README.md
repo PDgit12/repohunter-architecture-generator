@@ -150,21 +150,25 @@ python hub.py status
 
 ---
 
-## 🤝 Parallel Agent Interaction Model
+## 🤝 Six-Agent Collaboration Model
 
-RepoHunter does not just run independent agents and merge text.
+RepoHunter runs six parallel, communicating agents across three domains:
 
-- Round 1 runs in parallel:
-  - `requirements-analyst`
-  - `system-designer`
-  - `execution-planner`
-- Round 2 runs in parallel reviewer loop:
-  - `requirements-reviewer`
-  - `design-reviewer`
-  - `execution-reviewer`
-- Final synthesis agent reads all outputs from shared blackboard and resolves final architecture decisions.
+- Planning domain
+  - `planning-scope-agent`
+  - `planning-structure-agent`
+- Quality/Security domain
+  - `quality-code-agent`
+  - `security-agent`
+- Implementation domain
+  - `implementation-writer-agent`
+  - `implementation-refactor-agent`
 
-This gives explicit cross-agent interaction before `architecture.md` is emitted.
+All agents read/write to a shared blackboard so domain outputs feed each other.
+The final `architecture.md` includes:
+- domain-specific reports
+- progress timeline updates
+- implementation prompt and evidence
 
 ---
 
